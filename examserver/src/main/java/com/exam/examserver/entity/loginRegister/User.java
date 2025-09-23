@@ -1,4 +1,4 @@
-package com.exam.examserver.entity;
+package com.exam.examserver.entity.loginRegister;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

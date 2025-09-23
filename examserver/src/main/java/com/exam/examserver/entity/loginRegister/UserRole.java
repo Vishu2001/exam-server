@@ -1,4 +1,4 @@
-package com.exam.examserver.entity;
+package com.exam.examserver.entity.loginRegister;
 
 import jakarta.persistence.*;
 
