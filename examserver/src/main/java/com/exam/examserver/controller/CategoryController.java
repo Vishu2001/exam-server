@@ -3,23 +3,20 @@ package com.exam.examserver.controller;
 import com.exam.examserver.dto.ApiResponse;
 import com.exam.examserver.dto.CategoryDTO;
 import com.exam.examserver.entity.exam.Category;
-import com.exam.examserver.exception.DuplicateCategoryException;
-import com.exam.examserver.exception.ResouceNotFoundException;
+import com.exam.examserver.exception.ResourceNotFoundException;
 import com.exam.examserver.service.CategoryService;
-import com.exam.examserver.service.CategoryServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 
 @RestController
 @RequestMapping("/v1/category")
+@CrossOrigin("*")
 public class CategoryController {
 
     @Autowired
@@ -73,9 +70,9 @@ public class CategoryController {
         try {
 
             CategoryDTO deleted = categoryService.deleteAndReturn(cId);
-            ApiResponse<CategoryDTO> response = new ApiResponse<>("Category deleted sucessfully", deleted);
+            ApiResponse<CategoryDTO> response = new ApiResponse<>("Category deleted successfully", deleted);
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (ResouceNotFoundException e) {
+        } catch (ResourceNotFoundException e) {
             ApiResponse<CategoryDTO> response = new ApiResponse<>(e.getMessage(),null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }

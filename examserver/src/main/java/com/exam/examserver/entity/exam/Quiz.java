@@ -31,7 +31,7 @@ public class Quiz {
 
         }
 
-        @OneToMany(mappedBy = "quiz",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+        @OneToMany(mappedBy = "quiz",cascade = CascadeType.ALL,orphanRemoval = true)
         @JsonIgnore
         private Set<Question> questionSet = new HashSet<>();
 
@@ -89,5 +89,13 @@ public class Quiz {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public Set<Question> getQuestionSet() {
+        return questionSet;
+    }
+
+    public void setQuestionSet(Set<Question> questionSet) {
+        this.questionSet = questionSet;
     }
 }

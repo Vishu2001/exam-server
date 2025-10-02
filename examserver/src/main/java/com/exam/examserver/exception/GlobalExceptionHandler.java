@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,8 +20,19 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResouceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(ResouceNotFoundException ex, WebRequest req){
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest req) {
+        String path = ((ServletWebRequest) req).getRequest().getRequestURI();
+        String value = ex.getValue() == null ? "null" : ex.getValue().toString();
+        String expected = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "valid value";
+        String msg = String.format("Invalid value '%s' for parameter '%s'. Expected type: %s", value, ex.getName(), expected);
+
+        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), "INVALID_PARAMETER", msg, path);
+        return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex, WebRequest req){
         String path = ((ServletWebRequest) req).getRequest().getRequestURI();
         ApiError err = new ApiError(HttpStatus.NOT_FOUND.value(),"RESOURCE_NOT_FOUND",ex.getMessage(),path);
         return new ResponseEntity<>(err,HttpStatus.NOT_FOUND);

@@ -18,7 +18,7 @@ public class Category {
     @Column(length = 5000)
     private String description;
 
-    @OneToMany(mappedBy = "category",fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+        @OneToMany(mappedBy = "category",cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<Quiz> quizSet = new LinkedHashSet<>();
 

@@ -3,7 +3,7 @@ package com.exam.examserver.service;
 import com.exam.examserver.dto.CategoryDTO;
 import com.exam.examserver.entity.exam.Category;
 import com.exam.examserver.exception.BadRequestException;
-import com.exam.examserver.exception.ResouceNotFoundException;
+import com.exam.examserver.exception.ResourceNotFoundException;
 import com.exam.examserver.repository.CategoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +57,7 @@ public class CategoryServiceImpl implements CategoryService{
     public CategoryDTO patchCategory(Long cId, Map<String, Object> updates) {
 
         Category existingEntity = categoryRepository.findById(cId)
-                .orElseThrow(() -> new ResouceNotFoundException("Category not found with cid "+ cId));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with cid "+ cId));
 
         //convert update into json node
         JsonNode updatesNode = objectMapper.valueToTree(updates);
@@ -82,7 +82,7 @@ public class CategoryServiceImpl implements CategoryService{
     public CategoryDTO deleteAndReturn(Long cId) {
 
         Category category = categoryRepository.findById(cId)
-                .orElseThrow(()-> new ResouceNotFoundException("Category not found with cId: "+ cId));
+                .orElseThrow(()-> new ResourceNotFoundException("Category not found with cId: "+ cId));
 
         CategoryDTO dto = new CategoryDTO(category.getCid(),category.getTitle(),category.getDescription());
         categoryRepository.delete(category);

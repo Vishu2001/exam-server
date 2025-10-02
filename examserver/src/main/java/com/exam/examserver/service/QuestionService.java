@@ -1,16 +1,20 @@
 package com.exam.examserver.service;
 
+import com.exam.examserver.dto.QuestionDTO;
 import com.exam.examserver.entity.exam.Question;
 import com.exam.examserver.entity.exam.Quiz;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface QuestionService {
 
-    Question addQuestion(Question question);
+    Question addQuestion(QuestionDTO questionDTO);
     Question updateQuestion(Question question);
     Set<Question> getQuestions();
     Question getQuestion(Long questionId);
     Set<Question> getQuestionsOfQuiz(Quiz quiz);
+    QuestionDTO patchQuestion (Long questionId, Map<String,Object> updates);
+    QuestionDTO deleteAndReturn(Long questionId);
 
 }
