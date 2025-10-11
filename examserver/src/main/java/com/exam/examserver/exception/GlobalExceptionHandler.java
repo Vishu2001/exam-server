@@ -39,11 +39,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex,WebRequest req){
+    public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex, WebRequest req){
         String path = ((ServletWebRequest)req).getRequest().getRequestURI();
-        ApiError err = new ApiError(HttpStatus.NOT_FOUND.value(), "BAD REQUEST",ex.getMessage(),path);
-        return new ResponseEntity<>(err,HttpStatus.BAD_REQUEST);
+        // use BAD_REQUEST.value() here
+        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", ex.getMessage(), path);
+        return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
     }
+
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiError> handleConflict (ConflictException ex,WebRequest req){

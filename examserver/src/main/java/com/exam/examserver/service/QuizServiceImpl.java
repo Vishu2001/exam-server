@@ -6,6 +6,7 @@ import com.exam.examserver.entity.exam.Quiz;
 import com.exam.examserver.exception.BadRequestException;
 import com.exam.examserver.exception.ResourceNotFoundException;
 import com.exam.examserver.mapper.QuizMapper;
+import com.exam.examserver.repository.CategoryRepository;
 import com.exam.examserver.repository.QuestionRepository;
 import com.exam.examserver.repository.QuizRepository;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -18,12 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.swing.text.html.parser.Entity;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class QuizServiceImpl implements QuizService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -149,6 +154,106 @@ public class QuizServiceImpl implements QuizService {
         Quiz saved = quizRepository.save(quiz);
         return com.exam.examserver.mapper.QuizMapper.toDto(saved);
     }
+
+    @Override
+    @Transactional
+    public QuizDTO patchQuizOptimised(Long cid, Long qId, Map<String, Object> updates) {
+        // quick null checks
+        if (cid == null || qId == null) {
+            throw new BadRequestException("Both query params 'cid' and 'qId' are required.");
+        }
+
+        // DEBUG: log incoming keys (optional, remove in production)
+        // System.out.println("PATCH keys: " + updates.keySet());
+
+        // 1) fetch quiz by qId AND cid in single DB call (ensure your repo method name matches)
+        Quiz quiz = quizRepository.findByQIdAndCategoryCid(qId, cid)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Quiz with id %d not found in category %d", qId, cid)));
+
+        // 2) allowed fields
+        Set<String> allowed = Set.of(
+                "title",
+                "description",
+                "maxMarks",
+                "numberOfQuestions",
+                "active"
+        );
+
+        // 3) explicitly forbidden category keys (special error)
+        Set<String> forbiddenCategoryKeys = Set.of("category", "categoryId", "category_id");
+
+        // 4) detect invalid keys (anything not allowed and not the special category keys)
+        Set<String> invalidKeys = updates.keySet().stream()
+                .filter(k -> !allowed.contains(k) && !forbiddenCategoryKeys.contains(k))
+                .collect(Collectors.toSet());
+
+        if (!invalidKeys.isEmpty()) {
+            // Throw with a clear message listing invalid keys
+            throw new BadRequestException("Invalid field(s) in request: " + String.join(", ", invalidKeys));
+        }
+
+        // 5) if category keys present -> throw a dedicated message
+        for (String fk : forbiddenCategoryKeys) {
+            if (updates.containsKey(fk)) {
+                throw new BadRequestException("Changing category is not allowed via this endpoint. Use a dedicated endpoint to move quizzes.");
+            }
+        }
+
+        // 6) Keep only allowed fields to actually patch
+        Map<String, Object> filtered = updates.entrySet().stream()
+                .filter(e -> allowed.contains(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // 7) apply partial update using Jackson ObjectMapper
+        try {
+            ObjectReader updater = objectMapper.readerForUpdating(quiz)
+                    .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            byte[] patchBytes = objectMapper.writeValueAsBytes(filtered);
+            updater.readValue(patchBytes);
+        } catch (Exception ex) {
+            throw new BadRequestException("Invalid patch content: " + ex.getMessage());
+        }
+
+        // 8) persist and return DTO
+        Quiz saved = quizRepository.save(quiz);
+        return QuizMapper.toDto(saved);
+    }
+
+    @Override
+    public Quiz getQuizByCidAndQid(Long qId, Long cid) {
+        return quizRepository.findByQIdAndCategoryCid(qId,cid).orElseThrow(
+                ()-> new ResourceNotFoundException("Quiz not found with id: "+ qId + " in category: " +cid ) );
+    }
+
+
+    // Get all quizzes of a Category by category id;
+    @Override
+    public Set<Quiz> getAllQuizzesOfaCategory(Long cId) {
+        // ensure category exists; change repository method name if your field is different
+        Category category = categoryRepository.findById(cId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with cid: " + cId));
+        return quizRepository.findByCategoryCid(cId);
+    }
+
+
+    //get all active quizzes
+    @Override
+    public List<Quiz> getActiveQuizzes() {
+        return this.quizRepository.findByActive(true);
+    }
+
+    //get all active quizzes of a Category
+    @Override
+    public List<Quiz> getActiveQuizzesOfCategory(Long cId) {
+        // ensure category exists; change repository method name if your field is different
+        Category category = categoryRepository.findById(cId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with cid: " + cId));
+
+        return this.quizRepository.findByCategoryCidAndActive(cId,true);
+    }
+
+
 
 
 }

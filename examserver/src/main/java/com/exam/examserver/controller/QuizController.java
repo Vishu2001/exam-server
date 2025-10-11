@@ -8,6 +8,7 @@ import com.exam.examserver.mapper.QuizMapper;
 import com.exam.examserver.service.CategoryService;
 import com.exam.examserver.service.QuizService;
 import com.exam.examserver.service.QuizServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,6 +63,21 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    // PATCH /api/quizzes?c={cid}&q={qid}
+    @PatchMapping(value = "/quizzes",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<QuizDTO>> patchQuizOptimised(
+            @RequestParam("cid") Long cid,
+            @RequestParam("qId") Long qId,
+            @RequestBody Map<String , Object> updates){
+        System.out.println("Controller: patch called with cid=" + cid + " qId=" + qId + " keys=" + updates.keySet());
+        QuizDTO updated = quizService.patchQuizOptimised(cid, qId, updates);
+        ApiResponse<QuizDTO> response = new ApiResponse<>("Quiz patched successfully",updated);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
     //get all quiz
     @GetMapping(value = "/")
     public ResponseEntity<ApiResponse<Set<Quiz>>> getAllQuiz(){
@@ -78,6 +95,16 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    //get a quiz by its category id and quiz id
+    @GetMapping("/quizzes")
+    public ResponseEntity<ApiResponse<Quiz>> getQuizByCidAndQId(
+            @RequestParam("cid") Long cid,
+            @RequestParam("qId") Long qId){
+        Quiz quiz = quizService.getQuizByCidAndQid(qId,cid);
+        ApiResponse<Quiz> response = new ApiResponse<>("Single Quiz fetched Successfully",quiz);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     //Delete a quiz
     @DeleteMapping(value = "/{qId}")
     public ResponseEntity<?> deleteAndReturn (@PathVariable("qId") Long qId){
@@ -86,5 +113,29 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    //Get all quizzes of a Category using its cId
+    @GetMapping(value = "/category/{cId}")
+    public ResponseEntity<?> getAllQuizzesOfaCategory(@PathVariable("cId") Long cId){
+        Set<Quiz> allQuiz = quizService.getAllQuizzesOfaCategory(cId);
+        ApiResponse<Set<Quiz>> response = new ApiResponse<>("Quizzes of cid: "+cId+" fetched successfully",allQuiz);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    //Get all active quizzes
+    @GetMapping(value = "/active")
+    public  ResponseEntity<?> getActiveQuizzes(){
+        List<Quiz> allActiveQuizzes = quizService.getActiveQuizzes();
+        ApiResponse<List<Quiz>> response = new ApiResponse<>("All active quizzes fetched successfully",allActiveQuizzes);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    //Get Active quizzes of category
+    @GetMapping(value = "/category/active/{cid}")
+    public ResponseEntity<?> getActiveQuizzesOfCategory(@PathVariable("cid") Long cid){
+
+        List<Quiz> allActiveQuizOfCategory = quizService.getActiveQuizzesOfCategory(cid);
+        ApiResponse<List<Quiz>> response = new ApiResponse<>("All active quizzes of a category fetched successfully",allActiveQuizOfCategory);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
 }

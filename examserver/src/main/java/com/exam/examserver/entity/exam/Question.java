@@ -12,6 +12,7 @@ public class Question {
 
     @Column(length = 5000)
     private String content;
+
     private String image;
 
     @Column(length = 5000)
@@ -23,7 +24,11 @@ public class Question {
     @Column(length = 5000)
     private String option4;
 
+
     private String answer;
+
+    @Transient
+    private String givenAnswer;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Quiz quiz;
@@ -41,6 +46,14 @@ public class Question {
         this.option4 = option4;
         this.answer = answer;
         this.quiz = quiz;
+    }
+
+    public String getGivenAnswer() {
+        return givenAnswer;
+    }
+
+    public void setGivenAnswer(String givenAnswer) {
+        this.givenAnswer = givenAnswer;
     }
 
     public Long getQuestionId() {
