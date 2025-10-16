@@ -27,6 +27,8 @@ public class Quiz {
         @ManyToOne (fetch = FetchType.EAGER)
         private Category category;
 
+        private Boolean deleted = false;
+
         public Quiz() {
 
         }
@@ -97,5 +99,13 @@ public class Quiz {
 
     public void setQuestionSet(Set<Question> questionSet) {
         this.questionSet = questionSet;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }

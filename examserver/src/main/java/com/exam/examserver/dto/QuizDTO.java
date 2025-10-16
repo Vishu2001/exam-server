@@ -23,6 +23,12 @@ public class QuizDTO {
         this.categoryId = categoryId;
     }
 
+    public QuizDTO(Long qId, String title, String description) {
+        this.qId = qId;
+        this.title = title;
+        this.description = description;
+    }
+
     public Long getqId() {
         return qId;
     }

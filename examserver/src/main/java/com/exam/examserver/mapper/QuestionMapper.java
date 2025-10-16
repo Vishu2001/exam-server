@@ -16,7 +16,7 @@ public class QuestionMapper {
         questionDTO.setOption2(q.getOption2());
         questionDTO.setOption3(q.getOption3());
         questionDTO.setOption4(q.getOption4());
-        questionDTO.setAnswer(q.getAnswer());
+//        questionDTO.setAnswer(q.getAnswer());
 
         if(q.getQuiz() != null ) questionDTO.setQuizId(q.getQuiz().getqId());
         return questionDTO;

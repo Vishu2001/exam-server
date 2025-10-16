@@ -6,6 +6,7 @@ import com.exam.examserver.entity.exam.Category;
 import com.exam.examserver.exception.ResourceNotFoundException;
 import com.exam.examserver.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,19 +33,19 @@ public class CategoryController {
 
     //get Category
     @GetMapping("/{categoryId}")
-    public ResponseEntity<ApiResponse<Category>> getCategory(@PathVariable("categoryId") Long categoryId){
-        Category category = this.categoryService.getCategory(categoryId);
-        ApiResponse<Category> response = new ApiResponse<>("Category Fetched Successfully",category);
+    public ResponseEntity<?> getCategory(@PathVariable("categoryId") Long categoryId){
+        CategoryDTO categoryDTO = this.categoryService.getCategoryByCid(categoryId);
+        ApiResponse<CategoryDTO> response = new ApiResponse<>("Category Fetched Successfully",categoryDTO);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    //get all categories
-    @GetMapping("/")
-    public ResponseEntity<ApiResponse<Set<Category>>> getAllCategories(){
-        Set<Category> categories = this.categoryService.getCategory();
-        ApiResponse<Set<Category>> response = new ApiResponse<>("All Categories fetched Successfully",categories);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+//    //get all categories
+//    @GetMapping("/")
+//    public ResponseEntity<ApiResponse<Set<Category>>> getAllCategories(){
+//        Set<Category> categories = this.categoryService.getCategory();
+//        ApiResponse<Set<Category>> response = new ApiResponse<>("All Categories fetched Successfully",categories);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
 
 //    //update Category
 //    @PutMapping("/")
@@ -76,5 +77,25 @@ public class CategoryController {
             ApiResponse<CategoryDTO> response = new ApiResponse<>(e.getMessage(),null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
+    }
+
+    //Soft delete category
+    @DeleteMapping("/soft/{cid}")
+    public ResponseEntity<?> softDeleteCategory(@PathVariable("cid") Long cid ){
+        CategoryDTO dto = categoryService.softDeleteCategory(cid);
+        ApiResponse<CategoryDTO> response = new ApiResponse<>("Category deleted successfully (softly)",dto);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    // List categories with paging (default non-deleted). params: page, size, includeDeleted=false
+    @GetMapping("/")
+    public ResponseEntity<?> listCategories(
+            @RequestParam(value = "page",defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10")int size,
+            @RequestParam(value = "includeDeleted",defaultValue = "false") boolean includeDeleted
+    ){
+        Page<CategoryDTO> result = categoryService.listCategories(page,size,includeDeleted);
+        ApiResponse<?> response = new ApiResponse<>("Categories fetched successfully",result);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

@@ -17,11 +17,13 @@ public interface QuizService {
     Quiz getQuiz(Long quizId);
     QuizDTO patchQuiz(Long qId, Map<String, Object> updates);
     QuizDTO deleteAndReturnQuiz(Long qId);
-    Set<Quiz> getAllQuizzesOfaCategory(Long cId);
+    List<QuizDTO> getAllQuizzesOfaCategory(Long cId);
     List<Quiz> getActiveQuizzes();
     List<Quiz> getActiveQuizzesOfCategory(Long cid);
     QuizDTO patchQuizOptimised(Long cid,Long qId, Map<String, Object> updates);
-    Quiz getQuizByCidAndQid(Long qId,Long cid);
+    QuizDTO getQuizByCidAndQid(Long qId,Long cid);
+
+    QuizDTO softDeleteQuiz(Long qId,Long cid);
 
 
 

@@ -1,6 +1,8 @@
 package com.exam.examserver.repository;
 
+import com.exam.examserver.dto.QuizDTO;
 import com.exam.examserver.entity.exam.Category;
+import com.exam.examserver.entity.exam.Question;
 import com.exam.examserver.entity.exam.Quiz;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,5 +21,11 @@ public interface QuizRepository extends JpaRepository<Quiz,Long> {
         List<Quiz> findByActive(Boolean b);
         List<Quiz> findByCategoryCidAndActive(Long cid, Boolean b);
         Optional<Quiz> findByQIdAndCategoryCid(Long qId,Long cid);
+
+
+        //soft delete methods
+        Quiz findByQIdAndDeletedFalseAndCategoryCid(Long qId, Long cid);
+        Optional<Quiz> findByQIdAndCategoryCidAndDeletedFalse(Long qId, Long cid);
+        List<Quiz> findByCategoryCidAndDeletedFalse(Long cid);
 
 }

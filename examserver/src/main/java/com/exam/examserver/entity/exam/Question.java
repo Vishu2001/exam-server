@@ -30,6 +30,8 @@ public class Question {
     @Transient
     private String givenAnswer;
 
+    private Boolean deleted = false;
+
     @ManyToOne(fetch = FetchType.EAGER)
     private Quiz quiz;
 
@@ -126,5 +128,13 @@ public class Question {
 
     public void setQuiz(Quiz quiz) {
         this.quiz = quiz;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }

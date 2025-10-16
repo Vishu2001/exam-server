@@ -1,13 +1,16 @@
 package com.exam.examserver.controller;
 
 import com.exam.examserver.dto.ApiResponse;
+import com.exam.examserver.dto.CategoryDTO;
 import com.exam.examserver.dto.QuestionDTO;
 import com.exam.examserver.entity.exam.Question;
 import com.exam.examserver.entity.exam.Quiz;
+import com.exam.examserver.mapper.QuestionMapper;
 import com.exam.examserver.service.QuestionService;
 import com.exam.examserver.service.QuizService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/question")
@@ -54,19 +58,6 @@ public class QuestionController {
         ApiResponse<QuestionDTO> response = new ApiResponse<>("Question updated successfully", questionDTO);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-
-//    //get all question of a quiz
-//    @GetMapping(value = "/quiz/{qId}")
-//    public ResponseEntity<?> getQuestionsOfQuiz(@PathVariable("qId") Long qId){
-//        Quiz quiz = this.quizService.getQuiz(qId);
-//        Set<Question> questions = quiz.getQuestionSet();
-//        List list = new ArrayList<>(questions);
-//        if(list.size()> Integer.parseInt(quiz.getNumberOfQuestions())){
-//            list = list.subList(0,Integer.parseInt(quiz.getNumberOfQuestions()+1));
-//        }
-//        Collections.shuffle(list);
-//        return  ResponseEntity.status(HttpStatus.OK).body(list);
-//    }
 
     //get all question of a quiz
     @GetMapping(value = "/quiz/{qId}")
@@ -118,6 +109,30 @@ public class QuestionController {
     public ResponseEntity<?> deleteAndReturn(@PathVariable ("questionId") Long questionId){
         QuestionDTO dto = questionService.deleteAndReturn(questionId);
         ApiResponse<QuestionDTO> response = new ApiResponse<>("Question deleted successfully",dto);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    //soft delete question
+    @DeleteMapping(path = "/soft-delete/" , params ={"cid","qId","questionId"} )
+    public ResponseEntity<?> softDeleteQuiz(
+            @RequestParam("cid") Long cid,
+            @RequestParam("qId") Long qId,
+            @RequestParam("questionId") Long questionId
+    ){
+        QuestionDTO questionDTO = questionService.softDeleteQuestion(questionId);
+        ApiResponse<?> response = new ApiResponse<>("Soft delete question successful",questionDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping(value = "/list-questions")
+    public ResponseEntity<?> getAllQuestionsByQIdAndCid(
+            @RequestParam(value = "page",defaultValue = "0") int page,
+            @RequestParam(value = "size",defaultValue = "5") int size,
+            @RequestParam("qId") Long qId,
+            @RequestParam("cid") Long cid
+    ){
+        Page<QuestionDTO> questionList = questionService.getAllQuestionsByQIdAndCid(page,size,qId,cid);
+        ApiResponse<?> response = new ApiResponse<>("All questions fetched successfully",questionList);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

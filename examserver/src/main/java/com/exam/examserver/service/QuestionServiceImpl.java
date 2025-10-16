@@ -1,23 +1,28 @@
 package com.exam.examserver.service;
 
+import com.exam.examserver.dto.CategoryDTO;
 import com.exam.examserver.dto.QuestionDTO;
+import com.exam.examserver.entity.exam.Category;
 import com.exam.examserver.entity.exam.Question;
 import com.exam.examserver.entity.exam.Quiz;
 import com.exam.examserver.exception.BadRequestException;
 import com.exam.examserver.exception.ResourceNotFoundException;
 import com.exam.examserver.mapper.QuestionMapper;
 import com.exam.examserver.repository.QuestionRepository;
+import com.exam.examserver.repository.QuizRepository;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +33,9 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private QuizRepository quizRepository;
 
     @Autowired
     private QuizService quizService;
@@ -68,7 +76,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public Question getQuestion(Long questionId) {
-        return this.questionRepository.findById(questionId)
+        return this.questionRepository.findByQuestionIdAndDeletedFalse(questionId)
                 .orElseThrow(()-> new ResourceNotFoundException("Question not found with id: "+ questionId));
     }
 
@@ -140,22 +148,6 @@ public class QuestionServiceImpl implements QuestionService {
         return QuestionMapper.toDto(saved);
     }
 
-//    @Override
-//    @Transactional
-//    public QuestionDTO deleteAndReturn(Long questionId) {
-//        // 1) fetch the managed entity or throw 404
-//        Question question = questionRepository.findById(questionId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
-//
-//        // 2) map to DTO before deleting (so we can return representation)
-//        QuestionDTO dto = QuestionMapper.toDto(question);
-//
-//        // 3) delete the entity
-//        questionRepository.delete(question);
-//
-//        // 4) return DTO
-//        return dto;
-//    }
 
     @Override
     @Transactional(readOnly = false)
@@ -169,37 +161,37 @@ public class QuestionServiceImpl implements QuestionService {
 
         questionRepository.deleteById(questionId);
 
-//        // 3) dissociate from parent Quiz (important to avoid persistence-context re-sync)
-//        Quiz parentQuiz = question.getQuiz();
-//        if (parentQuiz != null) {
-//            // remove the question from the parent's collection
-//            parentQuiz.getQuestionSet().remove(question);
-//
-//            // optional: adjust stored numberOfQuestions if you maintain it as a field
-//            String numStr = parentQuiz.getNumberOfQuestions();
-//            if (numStr != null) {
-//                try {
-//                    int n = Integer.parseInt(numStr);
-//                    n = Math.max(0, n - 1);
-//                    parentQuiz.setNumberOfQuestions(String.valueOf(n));
-//                } catch (NumberFormatException ignored) {
-//                    // ignore if it's not a number; don't fail delete for this
-//                }
-//            }
-//
-//            // persist the parent change so Hibernate knows we've removed the relationship
-//            entityManager.merge(parentQuiz);
-//            entityManager.flush();
-//        }
-//
-//        // 4) now delete the question itself (safe even if orphanRemoval already deleted it)
-//        if (questionRepository.existsById(questionId)) {
-//            questionRepository.deleteById(questionId);
-//            questionRepository.flush(); // force SQL and surface constraint errors if any
-//        }
-
-        // 5) return DTO
         return dto;
     }
+
+    @Override
+    public QuestionDTO softDeleteQuestion(Long questionId) {
+
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(()-> new ResourceNotFoundException("Question not found with id: "+ questionId));
+        question.setDeleted(true);
+        questionRepository.save(question);
+
+        return new QuestionDTO(question.getQuestionId(),question.getContent());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionDTO> getAllQuestionsByQIdAndCid(int page,int size, Long qId, Long cid) {
+        Quiz quiz = quizRepository.findByQIdAndCategoryCidAndDeletedFalse(qId,cid)
+                .orElseThrow(()-> new ResourceNotFoundException(String.format("Quiz with id %d not found in Category %d", qId, cid)));
+
+        Pageable pageable = PageRequest.of(Math.max(0,page),Math.max(1,size),Sort.by("questionId").ascending());
+
+        Page<?> pageOfQuestions = questionRepository.findByQuizQIdAndQuizCategoryCidAndDeletedFalse(qId,cid,pageable);
+
+        // Cast and map Page<Question> -> Page<QuestionDTO> using map()
+        @SuppressWarnings("unchecked")
+                Page<Question> questionPage = (Page<Question>) pageOfQuestions;
+
+        return questionPage.map(QuestionMapper::toDto);
+    }
+
+
 
 }

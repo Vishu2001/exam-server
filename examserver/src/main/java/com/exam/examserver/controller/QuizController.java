@@ -79,13 +79,13 @@ public class QuizController {
 
 
     //get all quiz
-    @GetMapping(value = "/")
-    public ResponseEntity<ApiResponse<Set<Quiz>>> getAllQuiz(){
-        Set<Quiz> allQuiz =  quizService.getQuizzes();
-
-        ApiResponse<Set<Quiz>> response = new ApiResponse<>("All quizzes fetched successfully",allQuiz);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+//    @GetMapping(value = "/")
+//    public ResponseEntity<ApiResponse<Set<Quiz>>> getAllQuiz(){
+//        Set<Quiz> allQuiz =  quizService.getQuizzes();
+//
+//        ApiResponse<Set<Quiz>> response = new ApiResponse<>("All quizzes fetched successfully",allQuiz);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
 
     //Get a quiz
     @GetMapping(value = "/{qId}")
@@ -95,15 +95,15 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    //get a quiz by its category id and quiz id
-    @GetMapping("/quizzes")
-    public ResponseEntity<ApiResponse<Quiz>> getQuizByCidAndQId(
-            @RequestParam("cid") Long cid,
-            @RequestParam("qId") Long qId){
-        Quiz quiz = quizService.getQuizByCidAndQid(qId,cid);
-        ApiResponse<Quiz> response = new ApiResponse<>("Single Quiz fetched Successfully",quiz);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+//    //get a quiz by its category id and quiz id
+//    @GetMapping("/quizzes")
+//    public ResponseEntity<ApiResponse<Quiz>> getQuizByCidAndQId(
+//            @RequestParam("cid") Long cid,
+//            @RequestParam("qId") Long qId){
+//        Quiz quiz = quizService.getQuizByCidAndQid(qId,cid);
+//        ApiResponse<Quiz> response = new ApiResponse<>("Single Quiz fetched Successfully",quiz);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
 
     //Delete a quiz
     @DeleteMapping(value = "/{qId}")
@@ -116,8 +116,8 @@ public class QuizController {
     //Get all quizzes of a Category using its cId
     @GetMapping(value = "/category/{cId}")
     public ResponseEntity<?> getAllQuizzesOfaCategory(@PathVariable("cId") Long cId){
-        Set<Quiz> allQuiz = quizService.getAllQuizzesOfaCategory(cId);
-        ApiResponse<Set<Quiz>> response = new ApiResponse<>("Quizzes of cid: "+cId+" fetched successfully",allQuiz);
+        List<QuizDTO> allQuiz = quizService.getAllQuizzesOfaCategory(cId);
+        ApiResponse<List<QuizDTO>> response = new ApiResponse<>("Quizzes of cid: "+cId+" fetched successfully",allQuiz);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -138,4 +138,25 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    //soft delete quiz
+    @DeleteMapping(path ="/soft-delete/by-category", params = {"cid","qId"})
+    public ResponseEntity<?> softDeleteQuiz(
+            @RequestParam("cid")Long cid,
+            @RequestParam("qId") Long qId
+            ){
+        QuizDTO deleteQuiz = quizService.softDeleteQuiz(qId,cid);
+        ApiResponse<QuizDTO> response = new ApiResponse<>("Quiz soft delete successful",deleteQuiz);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    //get all quizzes by cid and qId
+    @GetMapping(value = "/")
+    public ResponseEntity<?> getAllQuizzes(
+            @RequestParam("cid") Long cid,
+            @RequestParam("qId") Long qId
+    ){
+        QuizDTO quizDTO = quizService.getQuizByCidAndQid(qId,cid);
+        ApiResponse<?> response = new ApiResponse<>("Quiz fetched successfully",quizDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

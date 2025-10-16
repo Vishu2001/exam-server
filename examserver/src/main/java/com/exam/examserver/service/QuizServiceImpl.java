@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class QuizServiceImpl implements QuizService {
 
     @Autowired
@@ -220,21 +221,21 @@ public class QuizServiceImpl implements QuizService {
         return QuizMapper.toDto(saved);
     }
 
-    @Override
-    public Quiz getQuizByCidAndQid(Long qId, Long cid) {
-        return quizRepository.findByQIdAndCategoryCid(qId,cid).orElseThrow(
-                ()-> new ResourceNotFoundException("Quiz not found with id: "+ qId + " in category: " +cid ) );
-    }
 
 
     // Get all quizzes of a Category by category id;
     @Override
-    public Set<Quiz> getAllQuizzesOfaCategory(Long cId) {
+    public List<QuizDTO> getAllQuizzesOfaCategory(Long cId) {
         // ensure category exists; change repository method name if your field is different
         Category category = categoryRepository.findById(cId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with cid: " + cId));
-        return quizRepository.findByCategoryCid(cId);
-    }
+        List<Quiz> quizList = quizRepository.findByCategoryCidAndDeletedFalse(cId);
+
+        return quizList.stream()
+                .map(quiz -> new QuizDTO(quiz.getqId(),quiz.getTitle(),quiz.getDescription(),
+                        quiz.getMaxMarks(),quiz.getNumberOfQuestions(),quiz.isActive(),quiz.getCategory().getCid()))
+                .collect(Collectors.toList());
+            }
 
 
     //get all active quizzes
@@ -254,6 +255,30 @@ public class QuizServiceImpl implements QuizService {
     }
 
 
+    @Override
+    public QuizDTO softDeleteQuiz(Long qId,Long cid) {
+//        Category category = categoryRepository.findById(cid)
+//                .orElseThrow(()-> new ResourceNotFoundException("Category not found with id: "+ cid));
+
+        Quiz quiz = quizRepository.findByQIdAndCategoryCid(qId,cid)
+                .orElseThrow(()-> new ResourceNotFoundException("Either Category id and quiz id mismatched OR incorrect cid/qid given"));
+
+        //bulk update questions -> no collection loading
+        questionRepository.softDeleteByQuizId(qId);
+
+        quiz.setDeleted(true);
+        quizRepository.save(quiz);
+
+        return new QuizDTO(quiz.getqId(),quiz.getTitle(),quiz.getDescription());
+    }
+
+    @Override
+    public QuizDTO getQuizByCidAndQid(Long qid,Long cid) {
+        Category category = categoryRepository.findById(cid)
+                .orElseThrow(()-> new ResourceNotFoundException("Category not found with id: "+ cid));
+        Quiz quiz = quizRepository.findByQIdAndDeletedFalseAndCategoryCid(qid,cid);
+        return QuizMapper.toDto(quiz);
+    }
 
 
 }

@@ -18,6 +18,8 @@ public class Category {
     @Column(length = 5000)
     private String description;
 
+    private Boolean deleted = false;
+
         @OneToMany(mappedBy = "category",cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<Quiz> quizSet = new LinkedHashSet<>();
@@ -60,5 +62,13 @@ public class Category {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }

@@ -42,6 +42,11 @@ public class QuestionDTO {
         this.quizId = quizId;
     }
 
+    public QuestionDTO(Long questionId, String content) {
+        this.questionId = questionId;
+        this.content = content;
+    }
+
     // getters & setters
     public Long getQuestionId() { return questionId; }
     public void setQuestionId(Long questionId) { this.questionId = questionId; }
